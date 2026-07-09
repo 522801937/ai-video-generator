@@ -15,10 +15,10 @@ SCENE_HTML_TEMPLATE = r"""<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Microsoft YaHei','PingFang SC','Noto Sans SC',sans-serif;overflow:hidden;background:#0a0a1a}
+*,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
+body{{font-family:'Microsoft YaHei','PingFang SC','Noto Sans SC',sans-serif;overflow:hidden;background:#0a0a1a}}
 
-.scene{width:{W}px;height:{H}px;position:relative;overflow:hidden}
+.scene{{width:{W}px;height:{H}px;position:relative;overflow:hidden}}
 
 /* ─── Keyframes ─── */
 @keyframes kenBurnsSlow{{0%{{transform:scale(1)}}100%{{transform:scale(1.03)}}}}
