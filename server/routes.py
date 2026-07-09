@@ -28,6 +28,10 @@ class RenderRequest(BaseModel):
     speed: str = "+10%"
     resolution: list[int] = [1920, 1080]
     fps: int = 30
+    # ── 可选工作流开关 ──
+    subtitles: bool = True       # 是否生成字幕
+    voiceover: bool = True       # 是否生成配音 (False=纯画面)
+    bgTheme: str = "deep"        # 背景主题: deep/cosmic/ocean/sunset/forest/aurora/slate/violet
 
 class RenderResponse(BaseModel):
     task_id: str

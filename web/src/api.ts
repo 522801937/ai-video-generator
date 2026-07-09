@@ -21,11 +21,16 @@ export async function parseScript(content: string, title: string): Promise<{ tit
   return r.json()
 }
 
-export async function startRender(slides: SlideItem[], title: string, voice: string = 'xiaoxiao'): Promise<{ task_id: string; status: string }> {
+export async function startRender(
+  slides: SlideItem[],
+  title: string,
+  voice: string = 'xiaoxiao',
+  options?: { subtitles?: boolean; voiceover?: boolean; bgTheme?: string }
+): Promise<{ task_id: string; status: string }> {
   const r = await fetch(`${BASE}/render`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ slides, title, voice }),
+    body: JSON.stringify({ slides, title, voice, ...options }),
   })
   if (!r.ok) throw new Error(`Render failed: ${r.statusText}`)
   return r.json()

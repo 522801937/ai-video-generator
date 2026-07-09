@@ -31,7 +31,7 @@ def get_status(task_id: str) -> dict:
 
 
 def _run_render(task_id: str, params: dict):
-    """同步渲染流程 — 在后台线程中运行"""
+    """同步渲染流程 — 在后台线程中运行，支持可选字幕/配音/主题"""
     try:
         slides = params["slides"]
         title = params["title"]
@@ -39,6 +39,10 @@ def _run_render(task_id: str, params: dict):
         speed = params.get("speed", "+10%")
         resolution = tuple(params.get("resolution", [1920, 1080]))
         fps = params.get("fps", 30)
+        # ── 可选开关 ──
+        use_subtitles = params.get("subtitles", True)
+        use_voiceover = params.get("voiceover", True)
+        bg_theme = params.get("bgTheme", "deep")
 
         # 文件名只用 ASCII 字/数字，避免 FFmpeg concat 的编码问题
         safe_title = "".join(c if c.isascii() and (c.isalnum() or c in "._-") else "_" for c in title)[:50]
@@ -47,35 +51,50 @@ def _run_render(task_id: str, params: dict):
         out_dir = OUTPUT_ROOT / safe_title
         out_dir.mkdir(parents=True, exist_ok=True)
 
-        # Step 1: TTS 配音
+        # ── 注入背景主题到每个 slide ──
+        for slide in slides:
+            if "config" not in slide:
+                slide["config"] = {}
+            slide["config"]["bgTheme"] = bg_theme
+
+        # Step 1: TTS 配音（可选）
         _tasks[task_id] = {"status": "generating_audio", "progress": 10}
         import sys
         sys.path.insert(0, str(PROJECT_DIR))
-        from tts_engine import generate_all_slides_audio
+        from tts_engine import generate_all_slides_audio, generate_silence
 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        slide_results = loop.run_until_complete(
-            generate_all_slides_audio(slides, str(out_dir), voice, speed)
-        )
+
+        if use_voiceover:
+            slide_results = loop.run_until_complete(
+                generate_all_slides_audio(slides, str(out_dir), voice, speed)
+            )
+        else:
+            # 无配音模式：为每页生成静音占位
+            slide_results = []
+            for i, slide in enumerate(slides):
+                text = slide.get("text", "") or slide.get("title", "")
+                silence_path = str(out_dir / f"silence_{i:02d}.mp3")
+                audio_path = str(out_dir / f"audio_{i:02d}.mp3")
+                # 根据字数估算时长：中文 ~4字/秒，至少2秒
+                est_dur = max(2.0, len(text) / 4.0) if text else 3.0
+                loop.run_until_complete(generate_silence(audio_path, est_dur))
+                loop.run_until_complete(generate_silence(silence_path, 0.3))
+                slide_results.append({
+                    "index": i,
+                    "audio_path": audio_path,
+                    "meta": {"duration": est_dur, "word_count": 0, "words": []},
+                    "silence_path": silence_path,
+                })
+
         loop.close()
 
         # Step 2: 渲染每个场景为帧序列 → 场景视频
         _tasks[task_id] = {"status": "rendering_frames", "progress": 30}
         from renderer.playwright_renderer import render_scene_frames, frames_to_video
-        from media_fetcher import fetch_image
-
         scene_videos = []
         for i, (slide, result) in enumerate(zip(slides, slide_results)):
-            # 有关键词的场景自动爬图
-            if slide.get("keywords") and slide["type"] in ("image", "title", "bullets"):
-                try:
-                    img_path, _ = fetch_image(slide["keywords"], resolution)
-                    if img_path:
-                        slide["config"]["bgImage"] = img_path
-                except Exception:
-                    pass
-
             duration = result["meta"]["duration"] + 0.5  # 加 0.5s 避免音频截断
             scene_frame_dir = str(out_dir / f"scene_{i:02d}")
             os.makedirs(scene_frame_dir, exist_ok=True)
@@ -104,7 +123,7 @@ def _run_render(task_id: str, params: dict):
             "-crf", "18", temp_video,
         ], capture_output=True, text=True, encoding='utf-8', errors='replace')
 
-        # 合并音频
+        # 合并音频（无声模式也合并静音）
         from video_utils import concat_audio_files
         audio_paths = [r["audio_path"] for r in slide_results]
         silence_paths = [r["silence_path"] for r in slide_results]
@@ -120,15 +139,18 @@ def _run_render(task_id: str, params: dict):
             final_video,
         ], capture_output=True, text=True, encoding='utf-8', errors='replace')
 
-        # Step 4: 字幕烧录
-        _tasks[task_id] = {"status": "compositing", "progress": 90}
-        from subtitle_generator import generate_srt
-        srt_path = str(out_dir / "subtitles.srt")
-        generate_srt(slide_results, srt_path)
+        # Step 4: 字幕烧录（可选）
+        if use_subtitles and use_voiceover:
+            _tasks[task_id] = {"status": "compositing", "progress": 90}
+            from subtitle_generator import generate_srt
+            srt_path = str(out_dir / "subtitles.srt")
+            generate_srt(slide_results, srt_path)
 
-        from video_utils import burn_subtitles
-        subtitled_video = str(out_dir / f"{safe_title}_subtitled.mp4")
-        burn_subtitles(final_video, srt_path, subtitled_video)
+            from video_utils import burn_subtitles
+            subtitled_video = str(out_dir / f"{safe_title}_subtitled.mp4")
+            burn_subtitles(final_video, srt_path, subtitled_video)
+        else:
+            subtitled_video = final_video
 
         # 清理临时文件
         for v in scene_videos:

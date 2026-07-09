@@ -33,7 +33,6 @@ if sys.platform == 'win32':
 PROJECT_DIR = Path(__file__).parent
 sys.path.insert(0, str(PROJECT_DIR))
 
-from media_fetcher import fetch_image, fetch_gif, clear_cache
 from slide_generator import generate_all_slides
 from tts_engine import generate_all_slides_audio, resolve_voice, generate_audio
 from subtitle_generator import generate_srt
@@ -176,35 +175,10 @@ async def generate(config: dict):
     print(f"  页数: {len(slides)} | 音色: {voice} | 分辨率: {resolution}")
     print(f"{'='*60}\n")
 
-    # ── Step 1: 爬取素材 ──
-    print("📷 Step 1/5: 爬取素材...")
-    bg_paths = []
-    gif_paths = []
-
-    for i, slide in enumerate(slides):
-        kws = slide.get("keywords", [])
-        bk_opt = slide.get("background", "auto")
-        gif_opt = slide.get("gif", "none")
-
-        print(f"\n  第 {i+1} 页 关键词: {kws[:3] if kws else '(无)'}")
-
-        # 背景图
-        if bk_opt == "auto":
-            bg_path, src = fetch_image(kws, resolution)
-            bg_paths.append(bg_path)
-        elif bk_opt and os.path.exists(bk_opt):
-            bg_paths.append(bk_opt)
-        else:
-            bg_paths.append(None)
-
-        # GIF 动图
-        if gif_opt == "auto":
-            gif_path = fetch_gif(kws)
-            gif_paths.append(gif_path)
-        elif gif_opt and os.path.exists(gif_opt):
-            gif_paths.append(gif_opt)
-        else:
-            gif_paths.append(None)
+    # ── Step 1: 准备素材 ──
+    print("📷 Step 1/5: 准备素材...")
+    bg_paths = [None] * len(slides)
+    gif_paths = [None] * len(slides)
 
     # ── Step 2: 生成幻灯片 ──
     print(f"\n🎨 Step 2/5: 生成幻灯片...")
@@ -393,7 +367,7 @@ def show_menu():
             input("\n按回车继续...")
 
         elif choice == "7":
-            clear_cache()
+            print("缓存已清空。")
             input("按回车继续...")
 
         elif choice == "0":

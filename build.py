@@ -45,7 +45,6 @@ def build_exe():
         "--add-data", f"server{';'}server",
         "--add-data", f"tts_engine.py{';'}.",
         "--add-data", f"subtitle_generator.py{';'}.",
-        "--add-data", f"media_fetcher.py{';'}.",
         "--add-data", f"video_utils.py{';'}.",
         "--add-binary", f"ffi.dll{';'}.",
         "--add-binary", f"ffmpeg.exe{';'}.",
@@ -75,7 +74,6 @@ def build_exe():
         "--hidden-import", "fastapi",
         "--hidden-import", "playwright",
         "--hidden-import", "edge_tts",
-        "--hidden-import", "bs4",
         "app.py",
     ]
 
