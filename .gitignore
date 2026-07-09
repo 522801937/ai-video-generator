@@ -1,0 +1,49 @@
+# ─── Python ───
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
+.eggs/
+dist/
+build/
+*.spec
+*.manifest
+
+# ─── Virtual Environment ───
+venv/
+.venv/
+env/
+AI_env/
+
+# ─── Node / Frontend ───
+node_modules/
+web/dist/
+
+# ─── Binary Dependencies (download separately) ───
+ffmpeg.exe
+ffi.dll
+
+# ─── Generated Output ───
+output/
+cache/
+backgrounds/*.jpg
+backgrounds/*.png
+
+# ─── Temp / OS ───
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ─── IDE ───
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ─── Environment ───
+.env
+.env.local
+config.json

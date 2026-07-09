@@ -1,0 +1,30 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #0d1117; color: #e6edf3; }
+.app-container { display: flex; flex-direction: column; height: 100vh; }
+.app-header { padding: 12px 24px; background: #161b22; border-bottom: 1px solid #30363d; }
+.app-header h1 { font-size: 18px; font-weight: 600; }
+.app-main { display: flex; flex: 1; overflow: hidden; }
+.panel { padding: 16px; overflow-y: auto; }
+.panel-left { width: 320px; border-right: 1px solid #30363d; }
+.panel-center { flex: 1; display: flex; align-items: center; justify-content: center; background: #010409; }
+.panel-right { width: 280px; border-left: 1px solid #30363d; }
+
+/* Form fields */
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #c9d1d9; }
+.hint { font-size: 11px; color: #8b949e; margin-bottom: 6px; }
+.input, .textarea, .select {
+  width: 100%; padding: 8px 12px;
+  background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
+  color: #e6edf3; font-size: 14px; font-family: inherit;
+}
+.input:focus, .textarea:focus, .select:focus { outline: none; border-color: #58a6ff; }
+.textarea { resize: vertical; min-height: 60px; }
+.select { cursor: pointer; }
+.btn {
+  padding: 8px 16px; border: none; border-radius: 6px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: #238636; color: #fff; }
+.btn-primary:hover:not(:disabled) { background: #2ea043; }

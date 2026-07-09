@@ -1,0 +1,1 @@
+"""V2 Renderer — HTML5 Canvas to Video via Playwright + FFmpeg"""
